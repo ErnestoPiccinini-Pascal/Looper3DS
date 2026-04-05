@@ -1,5 +1,5 @@
-
 #include <3ds.h>
+#include <stdio.h>
 #include "audio_engine.h"
 
 int main() {

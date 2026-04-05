@@ -4,16 +4,15 @@
       "name": "windows-clang-arm64",
       "includePath": [
         "${workspaceFolder}/**",
-        "C:/devkitPro/libctru/include",
-        "C:/devkitPro/citro2d/include"
+        "C:/devkitPro/libctru/include"
+      ],
+      "defines": [
+        "__3DS__"
       ],
       "compilerPath": "C:/devkitPro/devkitARM/bin/arm-none-eabi-g++.exe",
       "cStandard": "c11",
       "cppStandard": "c++17",
-      "intelliSenseMode": "windows-clang-arm64",
-      "compilerArgs": [
-        ""
-      ]
+      "intelliSenseMode": "windows-clang-arm64"
     }
   ],
   "version": 4
