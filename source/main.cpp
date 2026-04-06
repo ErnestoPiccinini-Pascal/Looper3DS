@@ -1,45 +1,57 @@
 #include <3ds.h>
-#include <stdio.h>
-#include "../include/audio_engine.h"
 #include <cstdio>
+#include "../include/audio_engine.h"
+#include "../include/Microphone.h"
+
 
 int main() {
-    // inizializza i servizi base del 3DS
+    // Inizializza grafica
     gfxInitDefault();
+    consoleInit(GFX_TOP, NULL);
 
-    // apre una console testuale sullo schermo superiore
-    consoleInit(GFX_TOP, nullptr);
+    // Inizializza audio engine
+    AudioEngine audioEngine(512 * 1024); // Loop buffer da 512k campioni
+    audioEngine.init();
 
-    // crea un loop di 4 secondi
-    AudioEngine engine(22050 * 4);
+    // Inizializza microfono
+    Microphone mic(32 * 1024); // Buffer microfono da 32k campioni
 
-    // inizializza NDSP
-    engine.init();
+    bool recording = false;
 
-    // riempie il loop con una sinusoide 440Hz
-    engine.fillTestTone();
-
-    //printf("Loop test attivo!\n");
-    //printf("Dovresti sentire un LA continuo.\n");
-    //printf("START = esci\n");
-
-    // loop principale app
     while (aptMainLoop()) {
-        // aggiorna input tasti
-        printf("funzionante\n");
         hidScanInput();
+        u32 kDown = hidKeysDown();
 
-        // se premi START esce
-        if (hidKeysDown() & KEY_START)
-            break;
+        if (kDown & KEY_START)
+            break; // Esci dal programma
 
-        // aggiorna il motore audio
-        engine.update();
+        if (kDown & KEY_A) {
+            if (!recording) {
+                printf("Start recording...\n");
+                mic.start();
+                recording = true;
+            } else {
+                printf("Stop recording...\n");
+                mic.stop();
 
-        // aspetta il prossimo frame video
-        //gspWaitForVBlank();
+                // Copia dati dal microfono nel loop buffer dell'audio engine
+                for (size_t i = 0; i < mic.getBufferLength(); i++) {
+                    audioEngine.setSample(i, mic.getSample(i));
+                }
+
+                recording = false;
+            }
+        }
+
+        // Aggiorna l'audio engine
+        audioEngine.update();
+
+        gfxFlushBuffers();
+        gfxSwapBuffers();
+        gspWaitForVBlank();
     }
 
+    mic.stop();
     gfxExit();
     return 0;
 }

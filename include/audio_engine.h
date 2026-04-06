@@ -1,6 +1,5 @@
 #pragma once
 #include <3ds.h>
-#include <vector>
 #include <cstdint>
 
 class AudioEngine {
@@ -10,17 +9,15 @@ public:
 
     void init();
     void update();
-    void fillTestTone();
     void clear();
-
+    // void fillTestTone(); // commentato, useremo microfono
+    void setSample(size_t index, int16_t value);
 private:
-    std::vector<int16_t> loopBuffer;
+    int16_t* loopBuffer = nullptr;   // Allocazione lineare
+    size_t loopSize = 0;
     size_t playhead = 0;
 
-    ndspWaveBuf waveBufs[2];
-
-    // buffer NDSP in linear memory
-    int16_t* mixBuffers[2] = { nullptr, nullptr };
-
+    ndspWaveBuf waveBuf[2];
+    int16_t mixBuffers[2][512];
     int currentBuf = 0;
 };
