@@ -1,19 +1,20 @@
 {
-  "configurations": [
-    {
-      "name": "windows-clang-arm64",
-      "includePath": [
-        "${workspaceFolder}/**",
-        "C:/devkitPro/libctru/include"
-      ],
-      "defines": [
-        "__3DS__"
-      ],
-      "compilerPath": "C:/devkitPro/devkitARM/bin/arm-none-eabi-g++.exe",
-      "cStandard": "c11",
-      "cppStandard": "c++17",
-      "intelliSenseMode": "windows-clang-arm64"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "3DS",
+            "includePath": [
+                "C:/devkitPro/libctru/include",
+                "C:/devkitPro/citro2d/include",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "__3DS__"
+            ],
+            "compilerPath": "C:/devkitPro/devkitARM/bin/arm-none-eabi-g++.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
 }
