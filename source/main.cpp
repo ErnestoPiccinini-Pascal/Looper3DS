@@ -1,6 +1,7 @@
 #include <3ds.h>
 #include <stdio.h>
-#include "audio_engine.h"
+#include "../include/audio_engine.h"
+#include <cstdio>
 
 int main() {
     // inizializza i servizi base del 3DS
@@ -25,6 +26,7 @@ int main() {
     // loop principale app
     while (aptMainLoop()) {
         // aggiorna input tasti
+        printf("funzionante\n");
         hidScanInput();
 
         // se premi START esce
@@ -35,7 +37,7 @@ int main() {
         engine.update();
 
         // aspetta il prossimo frame video
-        gspWaitForVBlank();
+        //gspWaitForVBlank();
     }
 
     gfxExit();

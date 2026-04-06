@@ -17,8 +17,10 @@ private:
     std::vector<int16_t> loopBuffer;
     size_t playhead = 0;
 
-    ndspWaveBuf waveBuf[2];
-    int16_t mixBuffers[2][512];
+    ndspWaveBuf waveBufs[2];
+
+    // buffer NDSP in linear memory
+    int16_t* mixBuffers[2] = { nullptr, nullptr };
 
     int currentBuf = 0;
 };
