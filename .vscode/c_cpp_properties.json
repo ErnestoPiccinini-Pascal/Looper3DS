@@ -1,25 +1,24 @@
 {
   "configurations": [
     {
-      "name": "windows-gcc-x64",
-      "includePath": [
-        "${workspaceFolder}/**"
-      ],
       "name": "3DS",
-            "includePath": [
-                "C:/devkitPro/libctru/include",
-                "C:/devkitPro/citro2d/include",
-                "${workspaceFolder}/**"
-            ],
+      "includePath": [
+        "${workspaceFolder}/**",
+
+        "C:/devkitPro/devkitARM/arm-none-eabi/include",
+        "C:/devkitPro/devkitARM/lib/gcc/arm-none-eabi/13.2.0/include",
+        "C:/devkitPro/devkitARM/lib/gcc/arm-none-eabi/13.2.0/include-fixed",
+
+        "C:/devkitPro/libctru/include",
+        "C:/devkitPro/libctru/include/3ds"
+      ],
       "defines": [
         "__3DS__"
-
-
       ],
-      "compilerPath": "g++",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "windows-gcc-x64"
+      "compilerPath": "C:/devkitPro/devkitARM/bin/arm-none-eabi-g++.exe",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-arm"
     }
   ],
   "version": 4

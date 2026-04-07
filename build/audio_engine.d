@@ -1,6 +1,6 @@
 audio_engine.o: \
- C:/Users/giuse/Desktop/LoopingStation/source/audio_engine.cpp \
- C:/Users/giuse/Desktop/LoopingStation/include/audio_engine.h \
+ C:/Users/giuse/desktop/loopingstation/source/audio_engine.cpp \
+ C:/Users/giuse/desktop/loopingstation/include/audio_engine.h \
  C:/devkitPro/libctru/include/3ds.h \
  C:/devkitPro/libctru/include/3ds/types.h \
  C:/devkitPro/libctru/include/3ds/result.h \
@@ -88,7 +88,7 @@ audio_engine.o: \
  C:/devkitPro/libctru/include/3ds/font.h \
  C:/devkitPro/libctru/include/3ds/gdbhio_dev.h \
  C:/devkitPro/libctru/include/3ds/3dslink.h
-C:/Users/giuse/Desktop/LoopingStation/include/audio_engine.h:
+C:/Users/giuse/desktop/loopingstation/include/audio_engine.h:
 C:/devkitPro/libctru/include/3ds.h:
 C:/devkitPro/libctru/include/3ds/types.h:
 C:/devkitPro/libctru/include/3ds/result.h:

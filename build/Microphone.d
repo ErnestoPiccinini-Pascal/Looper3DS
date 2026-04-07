@@ -1,5 +1,5 @@
-Microphone.o: C:/Users/giuse/Desktop/LoopingStation/source/Microphone.cpp \
- C:/Users/giuse/Desktop/LoopingStation/include/Microphone.h \
+Microphone.o: C:/Users/giuse/desktop/loopingstation/source/Microphone.cpp \
+ C:/Users/giuse/desktop/loopingstation/include/Microphone.h \
  C:/devkitPro/libctru/include/3ds.h \
  C:/devkitPro/libctru/include/3ds/types.h \
  C:/devkitPro/libctru/include/3ds/result.h \
@@ -87,7 +87,7 @@ Microphone.o: C:/Users/giuse/Desktop/LoopingStation/source/Microphone.cpp \
  C:/devkitPro/libctru/include/3ds/font.h \
  C:/devkitPro/libctru/include/3ds/gdbhio_dev.h \
  C:/devkitPro/libctru/include/3ds/3dslink.h
-C:/Users/giuse/Desktop/LoopingStation/include/Microphone.h:
+C:/Users/giuse/desktop/loopingstation/include/Microphone.h:
 C:/devkitPro/libctru/include/3ds.h:
 C:/devkitPro/libctru/include/3ds/types.h:
 C:/devkitPro/libctru/include/3ds/result.h:

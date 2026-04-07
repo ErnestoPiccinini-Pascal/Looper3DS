@@ -1,4 +1,4 @@
-main.o: C:/Users/giuse/Desktop/LoopingStation/source/main.cpp \
+main.o: C:/Users/giuse/desktop/loopingstation/source/main.cpp \
  C:/devkitPro/libctru/include/3ds.h \
  C:/devkitPro/libctru/include/3ds/types.h \
  C:/devkitPro/libctru/include/3ds/result.h \
@@ -85,9 +85,7 @@ main.o: C:/Users/giuse/Desktop/LoopingStation/source/main.cpp \
  C:/devkitPro/libctru/include/3ds/romfs.h \
  C:/devkitPro/libctru/include/3ds/font.h \
  C:/devkitPro/libctru/include/3ds/gdbhio_dev.h \
- C:/devkitPro/libctru/include/3ds/3dslink.h \
- C:/Users/giuse/Desktop/LoopingStation/include/audio_engine.h \
- C:/Users/giuse/Desktop/LoopingStation/include/Microphone.h
+ C:/devkitPro/libctru/include/3ds/3dslink.h
 C:/devkitPro/libctru/include/3ds.h:
 C:/devkitPro/libctru/include/3ds/types.h:
 C:/devkitPro/libctru/include/3ds/result.h:
@@ -175,5 +173,3 @@ C:/devkitPro/libctru/include/3ds/romfs.h:
 C:/devkitPro/libctru/include/3ds/font.h:
 C:/devkitPro/libctru/include/3ds/gdbhio_dev.h:
 C:/devkitPro/libctru/include/3ds/3dslink.h:
-C:/Users/giuse/Desktop/LoopingStation/include/audio_engine.h:
-C:/Users/giuse/Desktop/LoopingStation/include/Microphone.h:

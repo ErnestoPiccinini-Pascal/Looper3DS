@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/giuse/Desktop/LoopingStation",
-      "program": "c:/Users/giuse/Desktop/LoopingStation/build/Debug/outDebug",
+      "cwd": "c:/Users/giuse/Desktop/LoopingStation/source",
+      "program": "c:/Users/giuse/Desktop/LoopingStation/source/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
