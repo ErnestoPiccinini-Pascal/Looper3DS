@@ -1,25 +1,25 @@
-#pragma once
+#ifndef AUDIO_ENGINE_H
+#define AUDIO_ENGINE_H
+
 #include <3ds.h>
-#include <cstdint>
 
 class AudioEngine {
 public:
-    AudioEngine(size_t loopSamples);
+    AudioEngine();
     ~AudioEngine();
 
-    void init();
-    void update();
-    void clear();
+    bool init(int seconds);
+    void addSample(size_t index, int16_t newSample);
+    void clearBuffer();
+    void play();
 
-    void setSample(size_t index, int16_t value);
-    void resetPlayback();
-    void flush();
+    size_t getSampleCount() const { return totalSamples; }
 
 private:
     int16_t* loopBuffer;
-    size_t bufferSize;
-    size_t playhead = 0;
-
-    ndspWaveBuf waveBuf[1];
-    int currentBuf = 0;
+    size_t totalSamples;
+    size_t bufferSizeInBytes;
+    ndspWaveBuf waveBuf;
 };
+
+#endif

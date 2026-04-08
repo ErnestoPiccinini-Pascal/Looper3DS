@@ -2,28 +2,24 @@
 #define MICROPHONE_H
 
 #include <3ds.h>
-#include <cstdint>
 
 class Microphone {
 public:
     Microphone();
     ~Microphone();
 
-    bool init();     
-    bool start();    
-    void stop();     
-    u32 getCurrentOffset() const; // <--- AGGIUNTA
+    bool init(int seconds);
+    void start();
+    void stop();
     
-    int16_t getSample(size_t index) const; 
-    size_t getBufferLength() const { return length; }
+    u32 getLastOffset() const; 
+    int16_t* getBuffer() { return (int16_t*)micBuffer; }
+    size_t getSampleCount() const { return currentSamples; }
 
 private:
-    int16_t* micBuffer;  
-    u32 micActualSize;
-    size_t bufferSizeBytes;
-    size_t length;
+    u8* micBuffer;
+    size_t currentSamples;
     bool initialized;
-    bool isSampling; 
 };
 
 #endif
