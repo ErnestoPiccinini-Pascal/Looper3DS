@@ -1,4 +1,4 @@
-main.o: C:/Users/giuse/desktop/loopingstation/source/main.cpp \
+main.o: C:/Users/giuse/desktop/loopingStation/source/main.cpp \
  C:/devkitPro/libctru/include/3ds.h \
  C:/devkitPro/libctru/include/3ds/types.h \
  C:/devkitPro/libctru/include/3ds/result.h \
