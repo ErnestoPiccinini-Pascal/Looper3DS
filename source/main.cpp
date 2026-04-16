@@ -8,6 +8,7 @@
 #define MAX_SECONDS 15 
 #define ALIGN_PAGE(size) (((size) + 0xFFF) & ~0xFFF)
 #define MAX_BUF_SIZE ALIGN_PAGE(MAX_SECONDS * SAMPLE_RATE * 2)
+#define NOISE_THRESHOLD 800 // Regola questo valore per la sensibilità (0-32767)
 
 typedef struct {
     int16_t* buffer;
@@ -15,7 +16,6 @@ typedef struct {
     int16_t peak;
 } Track;
 
-// Ricalcolo del picco per l'interfaccia
 int16_t calculate_peak(int16_t* buf, size_t samples) {
     int16_t max_v = 0;
     for(size_t i = 0; i < samples; i += 200) {
@@ -25,7 +25,6 @@ int16_t calculate_peak(int16_t* buf, size_t samples) {
     return max_v;
 }
 
-// Software Mixer
 void update_master_mix(Track* tracks, int16_t* play_buffer, size_t total_samples, size_t buf_size) {
     memset(play_buffer, 0, buf_size);
     for (size_t i = 0; i < total_samples; i++) {
@@ -33,7 +32,7 @@ void update_master_mix(Track* tracks, int16_t* play_buffer, size_t total_samples
         for (int t = 0; t < 4; t++) {
             if (tracks[t].active) mixed += (int32_t)tracks[t].buffer[i];
         }
-        mixed *= 12; // Boost volume
+        mixed *= 12; 
         if (mixed > 32767) mixed = 32767;
         if (mixed < -32768) mixed = -32768;
         play_buffer[i] = (int16_t)mixed;
@@ -77,8 +76,8 @@ int main() {
         if (kDown & KEY_START) break;
 
         if (!timerConfirmed) {
-            printf("\x1b[1;1H\x1b[36m--- TOGGLE LOOPER V79 ---\x1b[0m");
-            printf("\x1b[3;1HLoop Globale: %d sec (Su/Giu)", selectedSeconds);
+            printf("\x1b[1;1H\x1b[36m--- SMART LOOPER V80 ---\x1b[0m");
+            printf("\x1b[3;1HLoop Globale: %d sec", selectedSeconds);
             if (kDown & KEY_DUP && selectedSeconds < MAX_SECONDS) selectedSeconds++;
             if (kDown & KEY_DDOWN && selectedSeconds > 1) selectedSeconds--;
             if (kDown & KEY_A) {
@@ -95,18 +94,15 @@ int main() {
             if (kDown & KEY_DRIGHT) { if(currentTrack < 3) currentTrack++; }
             if (kDown & KEY_DLEFT) { if(currentTrack > 0) currentTrack--; }
 
-            // POSIZIONE GLOBALE (Timeline)
             u64 currentTime = osGetTime();
-            u64 elapsedMs = (currentTime - globalStartTime);
-            u64 loopMs = (u64)selectedSeconds * 1000;
-            u32 currentLoopPosMs = (u32)(elapsedMs % loopMs);
-            float progress = (float)currentLoopPosMs / (float)loopMs;
+            u32 currentLoopPosMs = (u32)((currentTime - globalStartTime) % (selectedSeconds * 1000));
+            float progress = (float)currentLoopPosMs / (selectedSeconds * 1000.0f);
 
-            printf("\x1b[1;1H\x1b[33m--- SYNC MIXER ---\x1b[0m");
-            printf("\x1b[2;1HLoop: [");
+            printf("\x1b[1;1H\x1b[33m--- SMART MIXER ---\x1b[0m");
+            printf("\x1b[2;1HPos: [");
             int dotPos = (int)(progress * 20);
             for(int i=0; i<20; i++) printf(i == dotPos ? ">" : "-");
-            printf("] %.1fs", (float)currentLoopPosMs/1000.0f);
+            printf("]");
 
             for(int i=0; i<4; i++) {
                 printf("\x1b[%d;1HT%d: %s %s", i+4, i+1, 
@@ -114,32 +110,13 @@ int main() {
                     (i == currentTrack) ? "<-- SEL" : "       ");
             }
 
-            // LOGICA TOGGLE (A per Start, A per Stop)
             if (kDown & KEY_A) {
+                is_recording = !is_recording;
                 if (!is_recording) {
-                    // --- INIZIO REGISTRAZIONE ---
-                    is_recording = true;
-                    // Pulizia istantanea per sovrascrittura totale
-                    memset(tracks[currentTrack].buffer, 0, active_buf_size);
-                    tracks[currentTrack].active = false; 
+                    // Quando fermiamo, ricalcoliamo il mix finale
+                    tracks[currentTrack].active = (calculate_peak(tracks[currentTrack].buffer, total_samples) > 100);
                     update_master_mix(tracks, play_buffer, total_samples, active_buf_size);
-                } else {
-                    // --- FINE REGISTRAZIONE ---
-                    is_recording = false;
-                    DSP_InvalidateDataCache(mic_buffer, active_buf_size);
-                    int16_t* mic_ptr = (int16_t*)mic_buffer;
-
-                    // Copia l'audio: essendo un buffer circolare, se hai superato i 5 secondi, 
-                    // il microfono ha già sovrascritto se stesso nel mic_buffer.
-                    for (size_t i = 0; i < total_samples; i++) {
-                        tracks[currentTrack].buffer[i] = mic_ptr[i]; 
-                    }
-
-                    tracks[currentTrack].active = true;
-                    tracks[currentTrack].peak = calculate_peak(tracks[currentTrack].buffer, total_samples);
-                    update_master_mix(tracks, play_buffer, total_samples, active_buf_size);
-
-                    // Aggiorna l'audio NDSP
+                    
                     ndspChnReset(0);
                     ndspChnSetRate(0, (float)SAMPLE_RATE);
                     ndspWaveBuf wave;
@@ -152,9 +129,36 @@ int main() {
             }
 
             if (is_recording) {
-                printf("\x1b[9;1H\x1b[41m REC T%d - (A per fermare) \x1b[0m", currentTrack + 1);
+                printf("\x1b[9;1H\x1b[41m SMART REC ON \x1b[0m (Suona per sovrascrivere)");
+                
+                // ANALISI IN REAL TIME DEL MICROFONO
+                DSP_InvalidateDataCache(mic_buffer, active_buf_size);
+                int16_t* mic_ptr = (int16_t*)mic_buffer;
+                
+                // Copiamo solo se il segnale supera la soglia
+                // Analizziamo un piccolo blocco intorno alla posizione attuale del DMA
+                u32 currentSample = (u32)(((u64)currentLoopPosMs * SAMPLE_RATE) / 1000);
+                
+                // Controlliamo il volume del mic nell'ultimo frammento
+                int16_t current_mic_peak = 0;
+                for(int i=0; i<200; i++) {
+                    int16_t val = abs(mic_ptr[(currentSample + i) % total_samples]);
+                    if(val > current_mic_peak) current_mic_peak = val;
+                }
+
+                // LOGICA SMART: Se c'è rumore, scrivi. Se c'è silenzio, non toccare.
+                if (current_mic_peak > NOISE_THRESHOLD) {
+                    for(int i=0; i<500; i++) { // Copia a piccoli blocchi per fluidità
+                        u32 idx = (currentSample + i) % total_samples;
+                        tracks[currentTrack].buffer[idx] = mic_ptr[idx];
+                    }
+                    printf("\x1b[10;1H\x1b[32m SCRITTURA... \x1b[0m");
+                } else {
+                    printf("\x1b[10;1H\x1b[30m ASCOLTO...   \x1b[0m");
+                }
             } else {
-                printf("\x1b[9;1H\x1b[0m[A] Registra/Stop | [B] Clear     ");
+                printf("\x1b[9;1H\x1b[0m[A] Toggle Rec | [B] Clear         ");
+                printf("\x1b[10;1H                     ");
             }
 
             if (kDown & KEY_B) {
