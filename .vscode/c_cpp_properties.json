@@ -4,6 +4,7 @@
             "name": "3DS",
             "includePath": [
                 "C:/devkitPro/libctru/include",
+                "C:/devkitPro/portlibs/3ds/include",
                 "${workspaceFolder}/**"
             ],
             "defines": [
