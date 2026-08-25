@@ -19,7 +19,6 @@
 
 // ============================================================
 // INDICI UI.T3S
-// Devono corrispondere ESATTAMENTE all'ordine di ui.t3s
 // ============================================================
 
 enum UIImage {
@@ -35,7 +34,6 @@ enum UIImage {
     IMG_SPEED_SX,
 
     IMG_CURSORE,
-
     IMG_LANCETTA,
 
     IMG_REC_LED_TOP,
@@ -75,13 +73,9 @@ typedef struct {
 
     int volume;
 
-    // SPEED:
-    //
-    // 0 = sinistra
-    // 1 = centro / x1
-    // 2 = destra
-    //
-    // Per ora modifica solamente la grafica.
+    // 0 = sx
+    // 1 = x1
+    // 2 = dx
     int speedState;
 
 } Track;
@@ -98,9 +92,6 @@ ndspWaveBuf masterWave;
 
 // ============================================================
 // COORDINATE TOP
-//
-// Non usiamo uno stride fisso perché le quattro colonne
-// del background non sono perfettamente equidistanti.
 // ============================================================
 
 static const float CONTROL_SELECT_X[NUM_TRACKS] = {
@@ -111,10 +102,6 @@ static const float CONTROL_SELECT_X[NUM_TRACKS] = {
     195.0f
 };
 
-
-// ============================================================
-// SPEED SPRITES
-// ============================================================
 
 static const float SPEED_SPRITE_X[NUM_TRACKS] = {
 
@@ -136,35 +123,28 @@ static const float SPEED_SPRITE_X[NUM_TRACKS] = {
 
 
 // ============================================================
-// VU METER
+// VU
 //
-// Questi sono i valori da ritoccare se la lancetta
-// dovesse essere leggermente fuori posizione.
+// V92:
+// VU_PIVOT_Y = 67
+//
+// V93:
+// spostato 7 pixel più in basso.
 // ============================================================
 
-// Centro/perno della lancetta nel top screen
 #define VU_PIVOT_X 324.0f
-#define VU_PIVOT_Y 67.0f
+#define VU_PIVOT_Y  74.0f
 
-// Punto del tuo lancetta.png attorno al quale deve ruotare.
-//
-// Il PNG è 30x33 e la linea termina quasi nell'angolo
-// inferiore destro.
 #define VU_CENTER_X 0.94f
 #define VU_CENTER_Y 0.97f
 
-// Angolo a volume zero
 #define VU_MIN_ROTATION -18.0f
-
-// Angolo a volume massimo
-#define VU_MAX_ROTATION 92.0f
+#define VU_MAX_ROTATION  92.0f
 
 
 // ============================================================
-// BOTTOM SCREEN
+// BOTTOM
 // ============================================================
-
-// Centri delle cinque guide verticali
 
 static const float FADER_X[5] = {
 
@@ -176,8 +156,6 @@ static const float FADER_X[5] = {
 };
 
 
-// LED delle quattro tracce
-
 static const float BOTTOM_LED_X[NUM_TRACKS] = {
 
     36.0f,
@@ -188,11 +166,6 @@ static const float BOTTOM_LED_X[NUM_TRACKS] = {
 
 
 #define BOTTOM_LED_Y 14.0f
-
-
-// ============================================================
-// CORSA FADER
-// ============================================================
 
 #define FADER_TOP     35
 #define FADER_BOTTOM 203
@@ -213,18 +186,15 @@ void drawText(
 
     C2D_Text text;
 
-
     C2D_TextParse(
         &text,
         buf,
         string
     );
 
-
     C2D_TextOptimize(
         &text
     );
-
 
     C2D_DrawText(
         &text,
@@ -240,7 +210,7 @@ void drawText(
 
 
 // ============================================================
-// DISEGNO IMMAGINE
+// IMAGE
 // ============================================================
 
 void drawImage(
@@ -256,7 +226,6 @@ void drawImage(
             imageIndex
         );
 
-
     C2D_DrawImageAt(
         img,
         x,
@@ -270,7 +239,7 @@ void drawImage(
 
 
 // ============================================================
-// CALCOLO PEAK
+// PEAK
 // ============================================================
 
 int16_t calculate_peak(
@@ -279,7 +248,6 @@ int16_t calculate_peak(
 ) {
 
     int32_t max_v = 0;
-
 
     for (
         size_t i = 0;
@@ -290,26 +258,22 @@ int16_t calculate_peak(
         int32_t v =
             (int32_t)buf[i];
 
-
         if (v < 0)
             v = -v;
-
 
         if (v > max_v)
             max_v = v;
     }
 
-
     if (max_v > 32767)
         max_v = 32767;
-
 
     return (int16_t)max_v;
 }
 
 
 // ============================================================
-// SOFTWARE MIXER
+// MIXER
 // ============================================================
 
 void update_master_mix(
@@ -336,10 +300,6 @@ void update_master_mix(
         int32_t mixed = 0;
 
 
-        // ====================================================
-        // TRACCE
-        // ====================================================
-
         for (
             int t = 0;
             t < NUM_TRACKS;
@@ -353,8 +313,6 @@ void update_master_mix(
             int32_t sample =
                 (int32_t)tracks[t].buffer[i];
 
-
-            // Volume individuale
 
             sample =
                 (
@@ -370,9 +328,7 @@ void update_master_mix(
         }
 
 
-        // ====================================================
-        // MASTER
-        // ====================================================
+        // Master
 
         mixed =
             (
@@ -384,20 +340,15 @@ void update_master_mix(
             100;
 
 
-        // ====================================================
-        // BOOST ORIGINALE
-        // ====================================================
+        // Boost originale
 
         mixed *= 12;
 
 
-        // ====================================================
-        // CLIPPING
-        // ====================================================
+        // Clipping
 
         if (mixed > 32767)
             mixed = 32767;
-
 
         if (mixed < -32768)
             mixed = -32768;
@@ -416,10 +367,7 @@ void update_master_mix(
 
 
 // ============================================================
-// RIAVVIO NDSP
-//
-// IMPORTANTE:
-// non viene chiamata quando muovi i fader.
+// NDSP
 // ============================================================
 
 void update_ndsp(
@@ -463,9 +411,7 @@ void update_ndsp(
 
     DSP_FlushDataCache(
         play_buffer,
-        total_samples
-        *
-        sizeof(int16_t)
+        total_samples * sizeof(int16_t)
     );
 
 
@@ -486,7 +432,6 @@ float volumeToY(
 
     if (volume < 0)
         volume = 0;
-
 
     if (volume > MAX_VOLUME)
         volume = MAX_VOLUME;
@@ -522,7 +467,6 @@ int yToVolume(
     if (y < FADER_TOP)
         y = FADER_TOP;
 
-
     if (y > FADER_BOTTOM)
         y = FADER_BOTTOM;
 
@@ -552,7 +496,6 @@ int yToVolume(
     if (volume < 0)
         volume = 0;
 
-
     if (volume > MAX_VOLUME)
         volume = MAX_VOLUME;
 
@@ -562,7 +505,7 @@ int yToVolume(
 
 
 // ============================================================
-// TROVA FADER TOUCH
+// TOUCH FADER
 // ============================================================
 
 int findTouchedFader(
@@ -602,7 +545,7 @@ int findTouchedFader(
 
 
 // ============================================================
-// CALCOLO VU
+// VU
 // ============================================================
 
 float calculateVU(
@@ -623,11 +566,6 @@ float calculateVU(
     int32_t maxLevel =
         0;
 
-
-    // ========================================================
-    // Leggiamo una piccola finestra di campioni invece
-    // di un singolo sample.
-    // ========================================================
 
     for (
         size_t offset = 0;
@@ -673,12 +611,9 @@ float calculateVU(
                 100;
 
 
-            mixed +=
-                sample;
+            mixed += sample;
         }
 
-
-        // MASTER
 
         mixed =
             (
@@ -690,14 +625,11 @@ float calculateVU(
             100;
 
 
-        // BOOST
-
         mixed *= 12;
 
 
         if (mixed > 32767)
             mixed = 32767;
-
 
         if (mixed < -32768)
             mixed = -32768;
@@ -727,26 +659,19 @@ float calculateVU(
 
 
 // ============================================================
-// DISEGNO LANCETTA VU
+// LANCETTA
 // ============================================================
 
 void drawNeedle(
     float vu
 ) {
 
-    // Limiti
-
     if (vu < 0.0f)
         vu = 0.0f;
-
 
     if (vu > 1.0f)
         vu = 1.0f;
 
-
-    // ========================================================
-    // CREA SPRITE DA lancetta.png
-    // ========================================================
 
     C2D_Sprite needle;
 
@@ -758,13 +683,6 @@ void drawNeedle(
     );
 
 
-    // ========================================================
-    // PUNTO DI ROTAZIONE
-    //
-    // Nel PNG la base della lancetta è quasi
-    // nell'angolo in basso a destra.
-    // ========================================================
-
     C2D_SpriteSetCenter(
         &needle,
         VU_CENTER_X,
@@ -772,20 +690,12 @@ void drawNeedle(
     );
 
 
-    // ========================================================
-    // POSIZIONE DEL PERNO SUL QUADRANTE
-    // ========================================================
-
     C2D_SpriteSetPos(
         &needle,
         VU_PIVOT_X,
         VU_PIVOT_Y
     );
 
-
-    // ========================================================
-    // CONVERSIONE VU 0-1 -> ANGOLO
-    // ========================================================
 
     float rotation =
         VU_MIN_ROTATION
@@ -799,19 +709,11 @@ void drawNeedle(
         );
 
 
-    // ========================================================
-    // ROTAZIONE
-    // ========================================================
-
     C2D_SpriteRotateDegrees(
         &needle,
         rotation
     );
 
-
-    // ========================================================
-    // DISEGNO
-    // ========================================================
 
     C2D_DrawSprite(
         &needle
@@ -833,20 +735,15 @@ void drawTrackSpeed(
 
 
     if (
-        tracks[track].speedState
-        ==
-        0
+        tracks[track].speedState == 0
     ) {
 
         sprite =
             IMG_SPEED_SX;
     }
 
-
     else if (
-        tracks[track].speedState
-        ==
-        2
+        tracks[track].speedState == 2
     ) {
 
         sprite =
@@ -856,20 +753,15 @@ void drawTrackSpeed(
 
     drawImage(
         sprite,
-
-        SPEED_SPRITE_X[
-            track
-        ],
-
+        SPEED_SPRITE_X[track],
         SPEED_SPRITE_Y,
-
         0.3f
     );
 }
 
 
 // ============================================================
-// SELEZIONE TOP
+// TOP SELECTION
 // ============================================================
 
 void drawTopSelection(
@@ -887,10 +779,6 @@ void drawTopSelection(
         selectedControl
     ) {
 
-        // ====================================================
-        // REC
-        // ====================================================
-
         case CONTROL_REC:
 
             drawImage(
@@ -902,10 +790,6 @@ void drawTopSelection(
 
             break;
 
-
-        // ====================================================
-        // SPEED
-        // ====================================================
 
         case CONTROL_SPEED:
 
@@ -919,10 +803,6 @@ void drawTopSelection(
             break;
 
 
-        // ====================================================
-        // REV
-        // ====================================================
-
         case CONTROL_REV:
 
             drawImage(
@@ -934,10 +814,6 @@ void drawTopSelection(
 
             break;
 
-
-        // ====================================================
-        // ERS
-        // ====================================================
 
         case CONTROL_ERS:
 
@@ -954,7 +830,7 @@ void drawTopSelection(
 
 
 // ============================================================
-// DRAW TOP
+// TOP
 // ============================================================
 
 void drawTop(
@@ -969,10 +845,6 @@ void drawTop(
     float vu
 ) {
 
-    // ========================================================
-    // BACKGROUND
-    // ========================================================
-
     drawImage(
         IMG_TOP_BG,
         0,
@@ -981,9 +853,7 @@ void drawTop(
     );
 
 
-    // ========================================================
     // SPEED
-    // ========================================================
 
     for (
         int i = 0;
@@ -998,11 +868,8 @@ void drawTop(
     }
 
 
-    // ========================================================
-    // LED REC TOP
-    //
-    // Il LED top rimane acceso solamente DURANTE REC.
-    // ========================================================
+    // LED TOP:
+    // solamente durante la registrazione.
 
     if (
         isRecording
@@ -1024,9 +891,7 @@ void drawTop(
     }
 
 
-    // ========================================================
-    // SELEZIONE
-    // ========================================================
+    // Selezione
 
     drawTopSelection(
         selectedTrack,
@@ -1034,9 +899,7 @@ void drawTop(
     );
 
 
-    // ========================================================
-    // LANCETTA VU
-    // ========================================================
+    // VU
 
     drawNeedle(
         vu
@@ -1045,7 +908,7 @@ void drawTop(
 
 
 // ============================================================
-// DRAW BOTTOM
+// BOTTOM
 // ============================================================
 
 void drawBottom(
@@ -1057,10 +920,6 @@ void drawBottom(
     int recordingTrack
 ) {
 
-    // ========================================================
-    // BACKGROUND
-    // ========================================================
-
     drawImage(
         IMG_BOTTOM_BG,
         0,
@@ -1070,7 +929,7 @@ void drawBottom(
 
 
     // ========================================================
-    // FADER TRACCE
+    // FADER 1-4
     // ========================================================
 
     for (
@@ -1127,13 +986,9 @@ void drawBottom(
 
 
     // ========================================================
-    // LED BOTTOM
+    // LED
     //
-    // Rimane acceso se:
-    //
-    // - traccia attiva
-    // O
-    // - traccia attualmente in registrazione
+    // acceso se active oppure se sta registrando.
     // ========================================================
 
     for (
@@ -1186,7 +1041,6 @@ int main() {
 
     gfxInitDefault();
 
-
     romfsInit();
 
 
@@ -1197,7 +1051,6 @@ int main() {
     ) {
 
         romfsExit();
-
         gfxExit();
 
         return 1;
@@ -1211,9 +1064,7 @@ int main() {
     ) {
 
         C3D_Fini();
-
         romfsExit();
-
         gfxExit();
 
         return 1;
@@ -1222,10 +1073,6 @@ int main() {
 
     C2D_Prepare();
 
-
-    // ========================================================
-    // TARGET
-    // ========================================================
 
     C3D_RenderTarget* top =
         C2D_CreateScreenTarget(
@@ -1241,10 +1088,6 @@ int main() {
         );
 
 
-    // ========================================================
-    // TEXT BUFFER
-    // ========================================================
-
     C2D_TextBuf textBuf =
         C2D_TextBufNew(
             2048
@@ -1252,7 +1095,7 @@ int main() {
 
 
     // ========================================================
-    // LOAD SPRITESHEET
+    // SPRITESHEET
     // ========================================================
 
     uiSheet =
@@ -1263,26 +1106,7 @@ int main() {
 
     if (
         !uiSheet
-    ) {
-
-        C2D_TextBufDelete(
-            textBuf
-        );
-
-
-        C2D_Fini();
-
-        C3D_Fini();
-
-        romfsExit();
-
-        gfxExit();
-
-        return 1;
-    }
-
-
-    if (
+        ||
         C2D_SpriteSheetCount(
             uiSheet
         )
@@ -1290,22 +1114,19 @@ int main() {
         IMG_COUNT
     ) {
 
-        C2D_SpriteSheetFree(
-            uiSheet
-        );
-
+        if (uiSheet)
+            C2D_SpriteSheetFree(
+                uiSheet
+            );
 
         C2D_TextBufDelete(
             textBuf
         );
 
-
         C2D_Fini();
-
         C3D_Fini();
 
         romfsExit();
-
         gfxExit();
 
         return 1;
@@ -1313,7 +1134,7 @@ int main() {
 
 
     // ========================================================
-    // AUDIO BUFFERS
+    // BUFFER
     // ========================================================
 
     u8* mic_buffer =
@@ -1342,10 +1163,6 @@ int main() {
         );
 
 
-    // ========================================================
-    // TRACK INIT
-    // ========================================================
-
     for (
         int i = 0;
         i < NUM_TRACKS;
@@ -1361,14 +1178,11 @@ int main() {
         tracks[i].active =
             false;
 
-
         tracks[i].peak =
             0;
 
-
         tracks[i].volume =
             100;
-
 
         tracks[i].speedState =
             1;
@@ -1393,32 +1207,19 @@ int main() {
     }
 
 
-    // ========================================================
-    // ERRORE ALLOCAZIONE
-    // ========================================================
-
     if (
         allocationError
     ) {
 
-        if (
-            play_buffer
-        ) {
-
+        if (play_buffer)
             linearFree(
                 play_buffer
             );
-        }
 
-
-        if (
-            mic_buffer
-        ) {
-
+        if (mic_buffer)
             free(
                 mic_buffer
             );
-        }
 
 
         for (
@@ -1442,18 +1243,14 @@ int main() {
             uiSheet
         );
 
-
         C2D_TextBufDelete(
             textBuf
         );
 
-
         C2D_Fini();
-
         C3D_Fini();
 
         romfsExit();
-
         gfxExit();
 
         return 1;
@@ -1468,16 +1265,90 @@ int main() {
 
 
     // ========================================================
-    // AUDIO INIT
+    // MICROFONO / AUDIO
     // ========================================================
 
     ndspInit();
 
 
-    micInit(
-        mic_buffer,
-        MAX_BUF_SIZE
+    Result micInitResult =
+        micInit(
+            mic_buffer,
+            MAX_BUF_SIZE
+        );
+
+
+    if (
+        R_FAILED(
+            micInitResult
+        )
+    ) {
+
+        ndspExit();
+
+        // cleanup minimale
+        linearFree(
+            play_buffer
+        );
+
+        for (
+            int i = 0;
+            i < NUM_TRACKS;
+            i++
+        ) {
+
+            linearFree(
+                tracks[i].buffer
+            );
+        }
+
+        free(
+            mic_buffer
+        );
+
+        C2D_SpriteSheetFree(
+            uiSheet
+        );
+
+        C2D_TextBufDelete(
+            textBuf
+        );
+
+        C2D_Fini();
+        C3D_Fini();
+
+        romfsExit();
+        gfxExit();
+
+        return 1;
+    }
+
+
+    // Dimensione reale utilizzabile dal MIC.
+    //
+    // micGetSampleDataSize() è prevista proprio
+    // per conoscere l'area dati disponibile.
+
+    u32 micDataSize =
+        micGetSampleDataSize();
+
+
+    MICU_SetPower(
+        true
     );
+
+
+    MICU_SetGain(
+        7
+    );
+
+
+    // NOTA:
+    //
+    // NON chiamiamo MICU_StartSampling() qui.
+    //
+    // Il microfono è inizializzato e alimentato,
+    // ma NON sta ancora registrando.
 
 
     ndspChnReset(0);
@@ -1574,7 +1445,7 @@ int main() {
 
 
         // ====================================================
-        // START = ESCI
+        // START
         // ====================================================
 
         if (
@@ -1588,7 +1459,7 @@ int main() {
 
 
         // ====================================================
-        // SCELTA DURATA LOOP
+        // SCELTA DURATA
         // ====================================================
 
         if (
@@ -1635,39 +1506,41 @@ int main() {
                 KEY_A
             ) {
 
+                // IMPORTANTE:
+                //
+                // La dimensione AUDIO è quella reale,
+                // non quella allineata della memoria.
+
                 active_buf_size =
-                    ALIGN_PAGE(
-                        selectedSeconds
-                        *
-                        SAMPLE_RATE
-                        *
-                        2
-                    );
+                    selectedSeconds
+                    *
+                    SAMPLE_RATE
+                    *
+                    sizeof(int16_t);
+
+
+                // Sicurezza rispetto all'area MIC reale.
+
+                if (
+                    active_buf_size
+                    >
+                    micDataSize
+                ) {
+
+                    active_buf_size =
+                        micDataSize;
+
+                    // PCM16 = multiplo di 2
+
+                    active_buf_size &=
+                        ~1;
+                }
 
 
                 total_samples =
                     active_buf_size
                     /
-                    2;
-
-
-                MICU_SetPower(
-                    true
-                );
-
-
-                MICU_SetGain(
-                    7
-                );
-
-
-                MICU_StartSampling(
-                    MICU_ENCODING_PCM16_SIGNED,
-                    MICU_SAMPLE_RATE_16360,
-                    0,
-                    active_buf_size,
-                    true
-                );
+                    sizeof(int16_t);
 
 
                 globalStartTime =
@@ -1687,7 +1560,7 @@ int main() {
         else {
 
             // =================================================
-            // EDIT SPEED
+            // SPEED EDIT
             // =================================================
 
             if (
@@ -1736,8 +1609,6 @@ int main() {
                 }
 
 
-                // A conferma
-
                 if (
                     kDown
                     &
@@ -1748,8 +1619,6 @@ int main() {
                         false;
                 }
 
-
-                // B esce
 
                 if (
                     kDown
@@ -1769,9 +1638,7 @@ int main() {
 
             else {
 
-                // =================================================
-                // TRACK SINISTRA / DESTRA
-                // =================================================
+                // TRACK
 
                 if (
                     kDown
@@ -1807,9 +1674,7 @@ int main() {
                 }
 
 
-                // =================================================
-                // CONTROLLO SU
-                // =================================================
+                // CONTROLLO
 
                 if (
                     kDown
@@ -1832,10 +1697,6 @@ int main() {
                     }
                 }
 
-
-                // =================================================
-                // CONTROLLO GIÙ
-                // =================================================
 
                 if (
                     kDown
@@ -1880,57 +1741,100 @@ int main() {
                     ) {
 
                         // =========================================
-                        // START RECORD
+                        // START REC
                         // =========================================
 
                         if (
                             !isRecording
                         ) {
 
-                            recordingTrack =
-                                selectedTrack;
-
-
-                            isRecording =
-                                true;
-
+                            // -------------------------------------
+                            // PULISCE IL BUFFER MICROFONO
+                            //
+                            // Così non può esistere audio
+                            // precedente alla pressione REC.
+                            // -------------------------------------
 
                             memset(
+                                mic_buffer,
+                                0,
+                                MAX_BUF_SIZE
+                            );
+
+
+                            // -------------------------------------
+                            // START SAMPLING
+                            //
+                            // IL MICROFONO COMINCIA DAVVERO QUI.
+                            // -------------------------------------
+
+                            Result startResult =
+                                MICU_StartSampling(
+                                    MICU_ENCODING_PCM16_SIGNED,
+                                    MICU_SAMPLE_RATE_16360,
+                                    0,
+                                    active_buf_size,
+                                    true
+                                );
+
+
+                            // Procediamo SOLO se il MIC
+                            // ha iniziato correttamente.
+
+                            if (
+                                R_SUCCEEDED(
+                                    startResult
+                                )
+                            ) {
+
+                                recordingTrack =
+                                    selectedTrack;
+
+
+                                isRecording =
+                                    true;
+
+
+                                // Cancella vecchia registrazione
+                                // di questa traccia.
+
+                                memset(
+                                    tracks[
+                                        recordingTrack
+                                    ].buffer,
+                                    0,
+                                    active_buf_size
+                                );
+
+
                                 tracks[
                                     recordingTrack
-                                ].buffer,
-                                0,
-                                active_buf_size
-                            );
+                                ].active =
+                                    false;
 
 
-                            tracks[
-                                recordingTrack
-                            ].active =
-                                false;
+                                tracks[
+                                    recordingTrack
+                                ].peak =
+                                    0;
 
 
-                            tracks[
-                                recordingTrack
-                            ].peak =
-                                0;
+                                // Rimuove la vecchia traccia
+                                // dal master SENZA reset NDSP.
 
-
-                            // Toglie la vecchia traccia dal mix
-                            // senza riavviare il loop.
-
-                            update_master_mix(
-                                tracks,
-                                masterVolume,
-                                play_buffer,
-                                total_samples,
-                                active_buf_size
-                            );
+                                update_master_mix(
+                                    tracks,
+                                    masterVolume,
+                                    play_buffer,
+                                    total_samples,
+                                    active_buf_size
+                                );
+                            }
                         }
 
 
                         // =========================================
-                        // STOP RECORD
+                        // STOP REC
                         // =========================================
 
                         else if (
@@ -1939,9 +1843,19 @@ int main() {
                             selectedTrack
                         ) {
 
+                            // -------------------------------------
+                            // IL MICROFONO SMETTE DI REGISTRARE QUI
+                            // -------------------------------------
+
+                            MICU_StopSampling();
+
+
                             isRecording =
                                 false;
 
+
+                            // Ora il CPU deve rileggere i dati
+                            // scritti dal servizio MIC.
 
                             DSP_InvalidateDataCache(
                                 mic_buffer,
@@ -1982,10 +1896,6 @@ int main() {
                                 true;
 
 
-                            // =====================================
-                            // PEAK
-                            // =====================================
-
                             tracks[
                                 recordingTrack
                             ].peak =
@@ -1999,7 +1909,7 @@ int main() {
 
 
                             // =====================================
-                            // RICREA MIX
+                            // MIX
                             // =====================================
 
                             update_master_mix(
@@ -2012,7 +1922,7 @@ int main() {
 
 
                             // =====================================
-                            // RIAVVIA PLAYBACK
+                            // PLAYBACK
                             // =====================================
 
                             update_ndsp(
@@ -2021,7 +1931,7 @@ int main() {
                             );
 
 
-                            // Riallinea timeline logica
+                            // Riallinea la timeline al playback.
 
                             globalStartTime =
                                 osGetTime();
@@ -2058,7 +1968,7 @@ int main() {
                         CONTROL_REV
                     ) {
 
-                        // FUTURA IMPLEMENTAZIONE
+                        // futuro
                     }
 
 
@@ -2145,9 +2055,7 @@ int main() {
                         );
 
 
-                    // =========================================
-                    // FADER TRACK
-                    // =========================================
+                    // TRACK
 
                     if (
                         fader
@@ -2169,9 +2077,6 @@ int main() {
                                 newVolume;
 
 
-                            // Durante REC non modifichiamo
-                            // il buffer di playback.
-
                             if (
                                 !isRecording
                             ) {
@@ -2188,9 +2093,7 @@ int main() {
                     }
 
 
-                    // =========================================
                     // MASTER
-                    // =========================================
 
                     else {
 
@@ -2224,7 +2127,7 @@ int main() {
 
 
         // ====================================================
-        // CALCOLO VU
+        // VU
         // ====================================================
 
         if (
@@ -2272,9 +2175,7 @@ int main() {
                 );
 
 
-            // =================================================
-            // ATTACK VELOCE
-            // =================================================
+            // Attack
 
             if (
                 targetVU
@@ -2287,9 +2188,7 @@ int main() {
             }
 
 
-            // =================================================
-            // RELEASE LENTO
-            // =================================================
+            // Release
 
             else {
 
@@ -2325,7 +2224,7 @@ int main() {
 
 
         // ====================================================
-        // TOP SCREEN
+        // TOP
         // ====================================================
 
         C2D_TargetClear(
@@ -2361,16 +2260,11 @@ int main() {
             );
         }
 
-
-        // ====================================================
-        // SCHERMATA INIZIALE
-        // ====================================================
-
         else {
 
             drawText(
                 textBuf,
-                "LOOPING STATION V92",
+                "LOOPING STATION V93",
                 88,
                 60,
                 0.75f,
@@ -2429,7 +2323,7 @@ int main() {
 
 
         // ====================================================
-        // BOTTOM SCREEN
+        // BOTTOM
         // ====================================================
 
         C2D_TargetClear(
@@ -2462,10 +2356,6 @@ int main() {
         }
 
 
-        // ====================================================
-        // FINE FRAME
-        // ====================================================
-
         C3D_FrameEnd(0);
     }
 
@@ -2474,7 +2364,20 @@ int main() {
     // CLEANUP
     // ========================================================
 
-    MICU_StopSampling();
+    // Se usciamo mentre REC è ancora attivo,
+    // fermiamo prima il campionamento.
+
+    if (
+        isRecording
+    ) {
+
+        MICU_StopSampling();
+    }
+
+
+    MICU_SetPower(
+        false
+    );
 
 
     micExit();
@@ -2537,12 +2440,9 @@ int main() {
 
     C2D_Fini();
 
-
     C3D_Fini();
 
-
     romfsExit();
-
 
     gfxExit();
 
