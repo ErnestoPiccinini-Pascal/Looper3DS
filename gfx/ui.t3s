@@ -1,0 +1,15 @@
+--atlas -f rgba8888 -z auto
+
+top_bg.png
+bottom_bg.png
+selezione_speed.png
+selezione_rec.png
+speed_centro.png
+speed_dx.png
+speed_sx.png
+cursore.png
+lancetta.png
+luce_rec_top.png
+luce_rec_bottom.png
+selezione_quadrato.png
+selezione_save.png
