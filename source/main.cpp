@@ -16,12 +16,12 @@
 #define NUM_TRACKS 4
 #define MAX_VOLUME 120
 
-
 // ============================================================
 // INDICI UI.T3S
 // ============================================================
 
-enum UIImage {
+enum UIImage
+{
 
     IMG_TOP_BG = 0,
     IMG_BOTTOM_BG,
@@ -45,12 +45,12 @@ enum UIImage {
     IMG_COUNT
 };
 
-
 // ============================================================
 // CONTROLLI TOP
 // ============================================================
 
-enum ControlType {
+enum ControlType
+{
 
     CONTROL_REC = 0,
     CONTROL_SPEED,
@@ -58,14 +58,14 @@ enum ControlType {
     CONTROL_ERS
 };
 
-
 // ============================================================
 // TRACK
 // ============================================================
 
-typedef struct {
+typedef struct
+{
 
-    int16_t* buffer;
+    int16_t *buffer;
 
     bool active;
 
@@ -80,7 +80,6 @@ typedef struct {
 
 } Track;
 
-
 // ============================================================
 // GLOBALI
 // ============================================================
@@ -88,7 +87,6 @@ typedef struct {
 C2D_SpriteSheet uiSheet = NULL;
 
 ndspWaveBuf masterWave;
-
 
 // ============================================================
 // COORDINATE TOP
@@ -99,28 +97,23 @@ static const float CONTROL_SELECT_X[NUM_TRACKS] = {
     12.0f,
     71.0f,
     132.0f,
-    195.0f
-};
-
+    195.0f};
 
 static const float SPEED_SPRITE_X[NUM_TRACKS] = {
 
     5.0f,
     64.0f,
     125.0f,
-    188.0f
-};
+    188.0f};
 
+#define SEL_REC_Y 58.0f
+#define SEL_SPEED_Y 108.0f
+#define SEL_REV_Y 164.0f
+#define SEL_ERS_Y 186.0f
 
-#define SEL_REC_Y       58.0f
-#define SEL_SPEED_Y    108.0f
-#define SEL_REV_Y      164.0f
-#define SEL_ERS_Y      186.0f
+#define SPEED_SPRITE_Y 97.0f
 
-#define SPEED_SPRITE_Y  97.0f
-
-#define REC_LED_TOP_Y    22.0f
-
+#define REC_LED_TOP_Y 22.0f
 
 // ============================================================
 // VU
@@ -133,14 +126,13 @@ static const float SPEED_SPRITE_X[NUM_TRACKS] = {
 // ============================================================
 
 #define VU_PIVOT_X 324.0f
-#define VU_PIVOT_Y  74.0f
+#define VU_PIVOT_Y 74.0f
 
 #define VU_CENTER_X 0.94f
 #define VU_CENTER_Y 0.97f
 
 #define VU_MIN_ROTATION -18.0f
-#define VU_MAX_ROTATION  92.0f
-
+#define VU_MAX_ROTATION 92.0f
 
 // ============================================================
 // BOTTOM
@@ -152,24 +144,19 @@ static const float FADER_X[5] = {
     87.0f,
     149.0f,
     211.0f,
-    273.0f
-};
-
+    273.0f};
 
 static const float BOTTOM_LED_X[NUM_TRACKS] = {
 
     36.0f,
     98.0f,
     160.0f,
-    222.0f
-};
-
+    222.0f};
 
 #define BOTTOM_LED_Y 14.0f
 
-#define FADER_TOP     35
+#define FADER_TOP 35
 #define FADER_BOTTOM 203
-
 
 // ============================================================
 // TESTO
@@ -177,24 +164,22 @@ static const float BOTTOM_LED_X[NUM_TRACKS] = {
 
 void drawText(
     C2D_TextBuf buf,
-    const char* string,
+    const char *string,
     float x,
     float y,
     float scale,
-    u32 color
-) {
+    u32 color)
+{
 
     C2D_Text text;
 
     C2D_TextParse(
         &text,
         buf,
-        string
-    );
+        string);
 
     C2D_TextOptimize(
-        &text
-    );
+        &text);
 
     C2D_DrawText(
         &text,
@@ -204,10 +189,8 @@ void drawText(
         0.5f,
         scale,
         scale,
-        color
-    );
+        color);
 }
-
 
 // ============================================================
 // IMAGE
@@ -217,14 +200,13 @@ void drawImage(
     int imageIndex,
     float x,
     float y,
-    float z = 0.0f
-) {
+    float z = 0.0f)
+{
 
     C2D_Image img =
         C2D_SpriteSheetGetImage(
             uiSheet,
-            imageIndex
-        );
+            imageIndex);
 
     C2D_DrawImageAt(
         img,
@@ -233,27 +215,25 @@ void drawImage(
         z,
         NULL,
         1.0f,
-        1.0f
-    );
+        1.0f);
 }
-
 
 // ============================================================
 // PEAK
 // ============================================================
 
 int16_t calculate_peak(
-    int16_t* buf,
-    size_t samples
-) {
+    int16_t *buf,
+    size_t samples)
+{
 
     int32_t max_v = 0;
 
     for (
         size_t i = 0;
         i < samples;
-        i += 200
-    ) {
+        i += 200)
+    {
 
         int32_t v =
             (int32_t)buf[i];
@@ -271,79 +251,61 @@ int16_t calculate_peak(
     return (int16_t)max_v;
 }
 
-
 // ============================================================
 // MIXER
 // ============================================================
 
 void update_master_mix(
-    Track* tracks,
+    Track *tracks,
     int masterVolume,
-    int16_t* play_buffer,
+    int16_t *play_buffer,
     size_t total_samples,
-    size_t buf_size
-) {
+    size_t buf_size)
+{
 
     memset(
         play_buffer,
         0,
-        buf_size
-    );
-
+        buf_size);
 
     for (
         size_t i = 0;
         i < total_samples;
-        i++
-    ) {
+        i++)
+    {
 
         int32_t mixed = 0;
-
 
         for (
             int t = 0;
             t < NUM_TRACKS;
-            t++
-        ) {
+            t++)
+        {
 
             if (!tracks[t].active)
                 continue;
 
-
             int32_t sample =
                 (int32_t)tracks[t].buffer[i];
 
-
             sample =
-                (
-                    sample
-                    *
-                    tracks[t].volume
-                )
-                /
+                (sample *
+                 tracks[t].volume) /
                 100;
-
 
             mixed += sample;
         }
 
-
         // Master
 
         mixed =
-            (
-                mixed
-                *
-                masterVolume
-            )
-            /
+            (mixed *
+             masterVolume) /
             100;
-
 
         // Boost originale
 
         mixed *= 12;
-
 
         // Clipping
 
@@ -353,82 +315,64 @@ void update_master_mix(
         if (mixed < -32768)
             mixed = -32768;
 
-
         play_buffer[i] =
             (int16_t)mixed;
     }
 
-
     DSP_FlushDataCache(
         play_buffer,
-        buf_size
-    );
+        buf_size);
 }
-
 
 // ============================================================
 // NDSP
 // ============================================================
 
 void update_ndsp(
-    int16_t* play_buffer,
-    size_t total_samples
-) {
+    int16_t *play_buffer,
+    size_t total_samples)
+{
 
     ndspChnReset(0);
 
-
     ndspChnSetRate(
         0,
-        (float)SAMPLE_RATE
-    );
-
+        (float)SAMPLE_RATE);
 
     ndspChnSetFormat(
         0,
-        NDSP_FORMAT_MONO_PCM16
-    );
-
+        NDSP_FORMAT_MONO_PCM16);
 
     memset(
         &masterWave,
         0,
-        sizeof(masterWave)
-    );
-
+        sizeof(masterWave));
 
     masterWave.data_vaddr =
         play_buffer;
 
-
     masterWave.nsamples =
         total_samples;
-
 
     masterWave.looping =
         true;
 
-
     DSP_FlushDataCache(
         play_buffer,
-        total_samples * sizeof(int16_t)
-    );
-
+        total_samples * sizeof(int16_t));
 
     ndspChnWaveBufAdd(
         0,
-        &masterWave
-    );
+        &masterWave);
 }
-
 
 // ============================================================
 // VOLUME -> Y
 // ============================================================
 
 float volumeToY(
-    int volume
-) {
+    int volume)
+{
 
     if (volume < 0)
         volume = 0;
@@ -436,33 +380,23 @@ float volumeToY(
     if (volume > MAX_VOLUME)
         volume = MAX_VOLUME;
 
-
     float amount =
-        (float)volume
-        /
+        (float)volume /
         (float)MAX_VOLUME;
 
-
-    return
-        (float)FADER_BOTTOM
-        -
-        amount
-        *
-        (
-            FADER_BOTTOM
-            -
-            FADER_TOP
-        );
+    return (float)FADER_BOTTOM -
+           amount *
+               (FADER_BOTTOM -
+                FADER_TOP);
 }
-
 
 // ============================================================
 // Y -> VOLUME
 // ============================================================
 
 int yToVolume(
-    int y
-) {
+    int y)
+{
 
     if (y < FADER_TOP)
         y = FADER_TOP;
@@ -470,28 +404,15 @@ int yToVolume(
     if (y > FADER_BOTTOM)
         y = FADER_BOTTOM;
 
-
     float amount =
-        (
-            FADER_BOTTOM
-            -
-            y
-        )
-        /
-        (float)(
-            FADER_BOTTOM
-            -
-            FADER_TOP
-        );
-
+        (FADER_BOTTOM -
+         y) /
+        (float)(FADER_BOTTOM -
+                FADER_TOP);
 
     int volume =
-        (int)(
-            amount
-            *
-            MAX_VOLUME
-        );
-
+        (int)(amount *
+              MAX_VOLUME);
 
     if (volume < 0)
         volume = 0;
@@ -499,10 +420,8 @@ int yToVolume(
     if (volume > MAX_VOLUME)
         volume = MAX_VOLUME;
 
-
     return volume;
 }
-
 
 // ============================================================
 // TOUCH FADER
@@ -510,123 +429,95 @@ int yToVolume(
 
 int findTouchedFader(
     int px,
-    int py
-) {
+    int py)
+{
 
     if (
-        py < FADER_TOP - 15
-        ||
-        py > FADER_BOTTOM + 15
-    ) {
+        py < FADER_TOP - 15 ||
+        py > FADER_BOTTOM + 15)
+    {
 
         return -1;
     }
 
-
     for (
         int i = 0;
         i < 5;
-        i++
-    ) {
+        i++)
+    {
 
         if (
-            px >= FADER_X[i] - 24
-            &&
-            px <= FADER_X[i] + 24
-        ) {
+            px >= FADER_X[i] - 24 &&
+            px <= FADER_X[i] + 24)
+        {
 
             return i;
         }
     }
 
-
     return -1;
 }
-
 
 // ============================================================
 // VU
 // ============================================================
 
 float calculateVU(
-    Track* tracks,
+    Track *tracks,
     int masterVolume,
     size_t samplePosition,
-    size_t totalSamples
-) {
+    size_t totalSamples)
+{
 
     if (totalSamples == 0)
         return 0.0f;
 
-
     samplePosition %=
         totalSamples;
-
 
     int32_t maxLevel =
         0;
 
-
     for (
         size_t offset = 0;
         offset < 128;
-        offset += 4
-    ) {
+        offset += 4)
+    {
 
         size_t pos =
-            (
-                samplePosition
-                +
-                offset
-            )
-            %
+            (samplePosition +
+             offset) %
             totalSamples;
-
 
         int32_t mixed =
             0;
 
-
         for (
             int t = 0;
             t < NUM_TRACKS;
-            t++
-        ) {
+            t++)
+        {
 
             if (!tracks[t].active)
                 continue;
 
-
             int32_t sample =
                 tracks[t].buffer[pos];
 
-
             sample =
-                (
-                    sample
-                    *
-                    tracks[t].volume
-                )
-                /
+                (sample *
+                 tracks[t].volume) /
                 100;
-
 
             mixed += sample;
         }
 
-
         mixed =
-            (
-                mixed
-                *
-                masterVolume
-            )
-            /
+            (mixed *
+             masterVolume) /
             100;
 
-
         mixed *= 12;
-
 
         if (mixed > 32767)
             mixed = 32767;
@@ -634,37 +525,30 @@ float calculateVU(
         if (mixed < -32768)
             mixed = -32768;
 
-
         if (mixed < 0)
             mixed = -mixed;
-
 
         if (mixed > maxLevel)
             maxLevel = mixed;
     }
 
-
     float level =
-        (float)maxLevel
-        /
+        (float)maxLevel /
         32767.0f;
-
 
     if (level > 1.0f)
         level = 1.0f;
 
-
     return level;
 }
-
 
 // ============================================================
 // LANCETTA
 // ============================================================
 
 void drawNeedle(
-    float vu
-) {
+    float vu)
+{
 
     if (vu < 0.0f)
         vu = 0.0f;
@@ -672,93 +556,71 @@ void drawNeedle(
     if (vu > 1.0f)
         vu = 1.0f;
 
-
     C2D_Sprite needle;
-
 
     C2D_SpriteFromSheet(
         &needle,
         uiSheet,
-        IMG_LANCETTA
-    );
-
+        IMG_LANCETTA);
 
     C2D_SpriteSetCenter(
         &needle,
         VU_CENTER_X,
-        VU_CENTER_Y
-    );
-
+        VU_CENTER_Y);
 
     C2D_SpriteSetPos(
         &needle,
         VU_PIVOT_X,
-        VU_PIVOT_Y
-    );
-
+        VU_PIVOT_Y);
 
     float rotation =
-        VU_MIN_ROTATION
-        +
-        vu
-        *
-        (
-            VU_MAX_ROTATION
-            -
-            VU_MIN_ROTATION
-        );
-
+        VU_MIN_ROTATION +
+        vu *
+            (VU_MAX_ROTATION -
+             VU_MIN_ROTATION);
 
     C2D_SpriteRotateDegrees(
         &needle,
-        rotation
-    );
-
+        rotation);
 
     C2D_DrawSprite(
-        &needle
-    );
+        &needle);
 }
-
 
 // ============================================================
 // SPEED
 // ============================================================
 
 void drawTrackSpeed(
-    Track* tracks,
-    int track
-) {
+    Track *tracks,
+    int track)
+{
 
     int sprite =
         IMG_SPEED_CENTRO;
 
-
     if (
-        tracks[track].speedState == 0
-    ) {
+        tracks[track].speedState == 0)
+    {
 
         sprite =
             IMG_SPEED_SX;
     }
 
     else if (
-        tracks[track].speedState == 2
-    ) {
+        tracks[track].speedState == 2)
+    {
 
         sprite =
             IMG_SPEED_DX;
     }
 
-
     drawImage(
         sprite,
         SPEED_SPRITE_X[track],
         SPEED_SPRITE_Y,
-        0.3f
-    );
+        0.3f);
 }
-
 
 // ============================================================
 // TOP SELECTION
@@ -766,75 +628,64 @@ void drawTrackSpeed(
 
 void drawTopSelection(
     int selectedTrack,
-    ControlType selectedControl
-) {
+    ControlType selectedControl)
+{
 
     float x =
-        CONTROL_SELECT_X[
-            selectedTrack
-        ];
-
+        CONTROL_SELECT_X[selectedTrack];
 
     switch (
-        selectedControl
-    ) {
+        selectedControl)
+    {
 
-        case CONTROL_REC:
+    case CONTROL_REC:
 
-            drawImage(
-                IMG_SEL_REC,
-                x,
-                SEL_REC_Y,
-                0.8f
-            );
+        drawImage(
+            IMG_SEL_REC,
+            x,
+            SEL_REC_Y,
+            0.8f);
 
-            break;
+        break;
 
+    case CONTROL_SPEED:
 
-        case CONTROL_SPEED:
+        drawImage(
+            IMG_SEL_SPEED,
+            x,
+            SEL_SPEED_Y,
+            0.8f);
 
-            drawImage(
-                IMG_SEL_SPEED,
-                x,
-                SEL_SPEED_Y,
-                0.8f
-            );
+        break;
 
-            break;
+    case CONTROL_REV:
 
+        drawImage(
+            IMG_SEL_QUADRATO,
+            x,
+            SEL_REV_Y,
+            0.8f);
 
-        case CONTROL_REV:
+        break;
 
-            drawImage(
-                IMG_SEL_QUADRATO,
-                x,
-                SEL_REV_Y,
-                0.8f
-            );
+    case CONTROL_ERS:
 
-            break;
+        drawImage(
+            IMG_SEL_QUADRATO,
+            x,
+            SEL_ERS_Y,
+            0.8f);
 
-
-        case CONTROL_ERS:
-
-            drawImage(
-                IMG_SEL_QUADRATO,
-                x,
-                SEL_ERS_Y,
-                0.8f
-            );
-
-            break;
+        break;
     }
 }
-
 
 // ============================================================
 // TOP
 // ============================================================
 
 void drawTop(
-    Track* tracks,
+    Track *tracks,
 
     int selectedTrack,
     ControlType selectedControl,
@@ -842,91 +693,76 @@ void drawTop(
     bool isRecording,
     int recordingTrack,
 
-    float vu
-) {
+    float vu)
+{
 
     drawImage(
         IMG_TOP_BG,
         0,
         0,
-        0.0f
-    );
-
+        0.0f);
 
     // SPEED
 
     for (
         int i = 0;
         i < NUM_TRACKS;
-        i++
-    ) {
+        i++)
+    {
 
         drawTrackSpeed(
             tracks,
-            i
-        );
+            i);
     }
-
 
     // LED TOP:
     // solamente durante la registrazione.
 
     if (
-        isRecording
-        &&
-        recordingTrack >= 0
-    ) {
+        isRecording &&
+        recordingTrack >= 0)
+    {
 
         drawImage(
             IMG_REC_LED_TOP,
 
-            CONTROL_SELECT_X[
-                recordingTrack
-            ],
+            CONTROL_SELECT_X[recordingTrack],
 
             REC_LED_TOP_Y,
 
-            0.9f
-        );
+            0.9f);
     }
-
 
     // Selezione
 
     drawTopSelection(
         selectedTrack,
-        selectedControl
-    );
-
+        selectedControl);
 
     // VU
 
     drawNeedle(
-        vu
-    );
+        vu);
 }
-
 
 // ============================================================
 // BOTTOM
 // ============================================================
 
 void drawBottom(
-    Track* tracks,
+    Track *tracks,
 
     int masterVolume,
 
     bool isRecording,
-    int recordingTrack
-) {
+    int recordingTrack)
+{
 
     drawImage(
         IMG_BOTTOM_BG,
         0,
         0,
-        0.0f
-    );
-
+        0.0f);
 
     // ========================================================
     // FADER 1-4
@@ -935,30 +771,24 @@ void drawBottom(
     for (
         int i = 0;
         i < NUM_TRACKS;
-        i++
-    ) {
+        i++)
+    {
 
         float y =
             volumeToY(
-                tracks[i].volume
-            );
-
+                tracks[i].volume);
 
         drawImage(
             IMG_CURSORE,
 
-            FADER_X[i]
-            -
-            11.5f,
+            FADER_X[i] -
+                11.5f,
 
-            y
-            -
-            7.0f,
+            y -
+                7.0f,
 
-            0.6f
-        );
+            0.6f);
     }
-
 
     // ========================================================
     // MASTER
@@ -966,24 +796,18 @@ void drawBottom(
 
     float masterY =
         volumeToY(
-            masterVolume
-        );
-
+            masterVolume);
 
     drawImage(
         IMG_CURSORE,
 
-        FADER_X[4]
-        -
-        11.5f,
+        FADER_X[4] -
+            11.5f,
 
-        masterY
-        -
-        7.0f,
+        masterY -
+            7.0f,
 
-        0.6f
-    );
-
+        0.6f);
 
     // ========================================================
     // LED
@@ -994,46 +818,38 @@ void drawBottom(
     for (
         int i = 0;
         i < NUM_TRACKS;
-        i++
-    ) {
+        i++)
+    {
 
         bool ledOn =
-            tracks[i].active
-            ||
-            (
-                isRecording
-                &&
-                recordingTrack == i
-            );
-
+            tracks[i].active ||
+            (isRecording &&
+             recordingTrack == i);
 
         if (
-            ledOn
-        ) {
+            ledOn)
+        {
 
             drawImage(
                 IMG_REC_LED_BOTTOM,
 
-                BOTTOM_LED_X[i]
-                -
-                5.0f,
+                BOTTOM_LED_X[i] -
+                    5.0f,
 
-                BOTTOM_LED_Y
-                -
-                5.0f,
+                BOTTOM_LED_Y -
+                    5.0f,
 
-                0.9f
-            );
+                0.9f);
         }
     }
 }
-
 
 // ============================================================
 // MAIN
 // ============================================================
 
-int main() {
+int main()
+{
 
     // ========================================================
     // GRAFICA
@@ -1043,12 +859,10 @@ int main() {
 
     romfsInit();
 
-
     if (
         !C3D_Init(
-            C3D_DEFAULT_CMDBUF_SIZE
-        )
-    ) {
+            C3D_DEFAULT_CMDBUF_SIZE))
+    {
 
         romfsExit();
         gfxExit();
@@ -1056,12 +870,10 @@ int main() {
         return 1;
     }
 
-
     if (
         !C2D_Init(
-            C2D_DEFAULT_MAX_OBJECTS
-        )
-    ) {
+            C2D_DEFAULT_MAX_OBJECTS))
+    {
 
         C3D_Fini();
         romfsExit();
@@ -1070,29 +882,21 @@ int main() {
         return 1;
     }
 
-
     C2D_Prepare();
 
-
-    C3D_RenderTarget* top =
+    C3D_RenderTarget *top =
         C2D_CreateScreenTarget(
             GFX_TOP,
-            GFX_LEFT
-        );
+            GFX_LEFT);
 
-
-    C3D_RenderTarget* bottom =
+    C3D_RenderTarget *bottom =
         C2D_CreateScreenTarget(
             GFX_BOTTOM,
-            GFX_LEFT
-        );
-
+            GFX_LEFT);
 
     C2D_TextBuf textBuf =
         C2D_TextBufNew(
-            2048
-        );
-
+            2048);
 
     // ========================================================
     // SPRITESHEET
@@ -1100,28 +904,21 @@ int main() {
 
     uiSheet =
         C2D_SpriteSheetLoad(
-            "romfs:/gfx/ui.t3x"
-        );
-
+            "romfs:/gfx/ui.t3x");
 
     if (
-        !uiSheet
-        ||
+        !uiSheet ||
         C2D_SpriteSheetCount(
-            uiSheet
-        )
-        <
-        IMG_COUNT
-    ) {
+            uiSheet) <
+            IMG_COUNT)
+    {
 
         if (uiSheet)
             C2D_SpriteSheetFree(
-                uiSheet
-            );
+                uiSheet);
 
         C2D_TextBufDelete(
-            textBuf
-        );
+            textBuf);
 
         C2D_Fini();
         C3D_Fini();
@@ -1132,48 +929,34 @@ int main() {
         return 1;
     }
 
-
     // ========================================================
     // BUFFER
     // ========================================================
 
-    u8* mic_buffer =
-        (u8*)memalign(
+    u8 *mic_buffer =
+        (u8 *)memalign(
             0x1000,
-            MAX_BUF_SIZE
-        );
+            MAX_BUF_SIZE);
 
+    int16_t *play_buffer =
+        (int16_t *)linearAlloc(
+            MAX_BUF_SIZE);
 
-    int16_t* play_buffer =
-        (int16_t*)linearAlloc(
-            MAX_BUF_SIZE
-        );
-
-
-    Track tracks[
-        NUM_TRACKS
-    ];
-
+    Track tracks[NUM_TRACKS];
 
     bool allocationError =
-        (
-            !mic_buffer
-            ||
-            !play_buffer
-        );
-
+        (!mic_buffer ||
+         !play_buffer);
 
     for (
         int i = 0;
         i < NUM_TRACKS;
-        i++
-    ) {
+        i++)
+    {
 
         tracks[i].buffer =
-            (int16_t*)linearAlloc(
-                MAX_BUF_SIZE
-            );
-
+            (int16_t *)linearAlloc(
+                MAX_BUF_SIZE);
 
         tracks[i].active =
             false;
@@ -1187,65 +970,56 @@ int main() {
         tracks[i].speedState =
             1;
 
-
         if (
-            tracks[i].buffer
-        ) {
+            tracks[i].buffer)
+        {
 
             memset(
                 tracks[i].buffer,
                 0,
-                MAX_BUF_SIZE
-            );
+                MAX_BUF_SIZE);
         }
 
-        else {
+        else
+        {
 
             allocationError =
                 true;
         }
     }
 
-
     if (
-        allocationError
-    ) {
+        allocationError)
+    {
 
         if (play_buffer)
             linearFree(
-                play_buffer
-            );
+                play_buffer);
 
         if (mic_buffer)
             free(
-                mic_buffer
-            );
-
+                mic_buffer);
 
         for (
             int i = 0;
             i < NUM_TRACKS;
-            i++
-        ) {
+            i++)
+        {
 
             if (
-                tracks[i].buffer
-            ) {
+                tracks[i].buffer)
+            {
 
                 linearFree(
-                    tracks[i].buffer
-                );
+                    tracks[i].buffer);
             }
         }
 
-
         C2D_SpriteSheetFree(
-            uiSheet
-        );
+            uiSheet);
 
         C2D_TextBufDelete(
-            textBuf
-        );
+            textBuf);
 
         C2D_Fini();
         C3D_Fini();
@@ -1256,13 +1030,10 @@ int main() {
         return 1;
     }
 
-
     memset(
         play_buffer,
         0,
-        MAX_BUF_SIZE
-    );
-
+        MAX_BUF_SIZE);
 
     // ========================================================
     // MICROFONO / AUDIO
@@ -1270,49 +1041,40 @@ int main() {
 
     ndspInit();
 
-
     Result micInitResult =
         micInit(
             mic_buffer,
-            MAX_BUF_SIZE
-        );
-
+            MAX_BUF_SIZE);
 
     if (
         R_FAILED(
-            micInitResult
-        )
-    ) {
+            micInitResult))
+    {
 
         ndspExit();
 
         // cleanup minimale
         linearFree(
-            play_buffer
-        );
+            play_buffer);
 
         for (
             int i = 0;
             i < NUM_TRACKS;
-            i++
-        ) {
+            i++)
+        {
 
             linearFree(
-                tracks[i].buffer
-            );
+                tracks[i].buffer);
         }
 
         free(
-            mic_buffer
-        );
+            mic_buffer);
 
         C2D_SpriteSheetFree(
-            uiSheet
-        );
+            uiSheet);
 
         C2D_TextBufDelete(
-            textBuf
-        );
+            textBuf);
 
         C2D_Fini();
         C3D_Fini();
@@ -1322,7 +1084,6 @@ int main() {
 
         return 1;
     }
-
 
     // Dimensione reale utilizzabile dal MIC.
     //
@@ -1332,16 +1093,11 @@ int main() {
     u32 micDataSize =
         micGetSampleDataSize();
 
-
     MICU_SetPower(
-        true
-    );
-
+        true);
 
     MICU_SetGain(
-        7
-    );
-
+        7);
 
     // NOTA:
     //
@@ -1350,28 +1106,20 @@ int main() {
     // Il microfono è inizializzato e alimentato,
     // ma NON sta ancora registrando.
 
-
     ndspChnReset(0);
-
 
     ndspChnSetRate(
         0,
-        (float)SAMPLE_RATE
-    );
-
+        (float)SAMPLE_RATE);
 
     ndspChnSetFormat(
         0,
-        NDSP_FORMAT_MONO_PCM16
-    );
-
+        NDSP_FORMAT_MONO_PCM16);
 
     memset(
         &masterWave,
         0,
-        sizeof(masterWave)
-    );
-
+        sizeof(masterWave));
 
     // ========================================================
     // STATO
@@ -1380,131 +1128,107 @@ int main() {
     int selectedSeconds =
         5;
 
-
     bool timerConfirmed =
         false;
-
 
     size_t active_buf_size =
         0;
 
-
     size_t total_samples =
         0;
-
 
     u64 globalStartTime =
         0;
 
-
     int selectedTrack =
         0;
-
 
     ControlType selectedControl =
         CONTROL_REC;
 
-
     bool editingSpeed =
         false;
-
 
     bool isRecording =
         false;
 
-
     int recordingTrack =
         -1;
-
 
     int masterVolume =
         100;
 
-
     float vuLevel =
         0.0f;
-
 
     // ========================================================
     // MAIN LOOP
     // ========================================================
 
     while (
-        aptMainLoop()
-    ) {
+        aptMainLoop())
+    {
 
         hidScanInput();
-
 
         u32 kDown =
             hidKeysDown();
 
-
         u32 kHeld =
             hidKeysHeld();
-
 
         // ====================================================
         // START
         // ====================================================
 
         if (
-            kDown
-            &
-            KEY_START
-        ) {
+            kDown &
+            KEY_START)
+        {
 
             break;
         }
-
 
         // ====================================================
         // SCELTA DURATA
         // ====================================================
 
         if (
-            !timerConfirmed
-        ) {
+            !timerConfirmed)
+        {
 
             if (
-                kDown
-                &
-                KEY_DUP
-            ) {
+                kDown &
+                KEY_DUP)
+            {
 
                 if (
-                    selectedSeconds
-                    <
-                    MAX_SECONDS
-                ) {
+                    selectedSeconds <
+                    MAX_SECONDS)
+                {
 
                     selectedSeconds++;
                 }
             }
 
-
             if (
-                kDown
-                &
-                KEY_DDOWN
-            ) {
+                kDown &
+                KEY_DDOWN)
+            {
 
                 if (
-                    selectedSeconds
-                    >
-                    1
-                ) {
+                    selectedSeconds >
+                    1)
+                {
 
                     selectedSeconds--;
                 }
             }
 
-
             if (
-                kDown
-                &
-                KEY_A
-            ) {
+                kDown &
+                KEY_A)
+            {
 
                 // IMPORTANTE:
                 //
@@ -1512,20 +1236,16 @@ int main() {
                 // non quella allineata della memoria.
 
                 active_buf_size =
-                    selectedSeconds
-                    *
-                    SAMPLE_RATE
-                    *
+                    selectedSeconds *
+                    SAMPLE_RATE *
                     sizeof(int16_t);
-
 
                 // Sicurezza rispetto all'area MIC reale.
 
                 if (
-                    active_buf_size
-                    >
-                    micDataSize
-                ) {
+                    active_buf_size >
+                    micDataSize)
+                {
 
                     active_buf_size =
                         micDataSize;
@@ -1536,217 +1256,176 @@ int main() {
                         ~1;
                 }
 
-
                 total_samples =
-                    active_buf_size
-                    /
+                    active_buf_size /
                     sizeof(int16_t);
-
 
                 globalStartTime =
                     osGetTime();
-
 
                 timerConfirmed =
                     true;
             }
         }
 
-
         // ====================================================
         // MIXER
         // ====================================================
 
-        else {
+        else
+        {
 
             // =================================================
             // SPEED EDIT
             // =================================================
 
             if (
-                editingSpeed
-            ) {
+                editingSpeed)
+            {
 
                 if (
-                    kDown
-                    &
-                    KEY_DLEFT
-                ) {
+                    kDown &
+                    KEY_DLEFT)
+                {
 
                     if (
-                        tracks[
-                            selectedTrack
-                        ].speedState
-                        >
-                        0
-                    ) {
+                        tracks[selectedTrack].speedState >
+                        0)
+                    {
 
-                        tracks[
-                            selectedTrack
-                        ].speedState--;
+                        tracks[selectedTrack].speedState--;
                     }
                 }
 
-
                 if (
-                    kDown
-                    &
-                    KEY_DRIGHT
-                ) {
+                    kDown &
+                    KEY_DRIGHT)
+                {
 
                     if (
-                        tracks[
-                            selectedTrack
-                        ].speedState
-                        <
-                        2
-                    ) {
+                        tracks[selectedTrack].speedState <
+                        2)
+                    {
 
-                        tracks[
-                            selectedTrack
-                        ].speedState++;
+                        tracks[selectedTrack].speedState++;
                     }
                 }
 
-
                 if (
-                    kDown
-                    &
-                    KEY_A
-                ) {
+                    kDown &
+                    KEY_A)
+                {
 
                     editingSpeed =
                         false;
                 }
 
-
                 if (
-                    kDown
-                    &
-                    KEY_B
-                ) {
+                    kDown &
+                    KEY_B)
+                {
 
                     editingSpeed =
                         false;
                 }
             }
 
-
             // =================================================
             // NAVIGAZIONE NORMALE
             // =================================================
 
-            else {
+            else
+            {
 
                 // TRACK
 
                 if (
-                    kDown
-                    &
-                    KEY_DLEFT
-                ) {
+                    kDown &
+                    KEY_DLEFT)
+                {
 
                     if (
-                        selectedTrack
-                        >
-                        0
-                    ) {
+                        selectedTrack >
+                        0)
+                    {
 
                         selectedTrack--;
                     }
                 }
 
-
                 if (
-                    kDown
-                    &
-                    KEY_DRIGHT
-                ) {
+                    kDown &
+                    KEY_DRIGHT)
+                {
 
                     if (
-                        selectedTrack
-                        <
-                        NUM_TRACKS - 1
-                    ) {
+                        selectedTrack <
+                        NUM_TRACKS - 1)
+                    {
 
                         selectedTrack++;
                     }
                 }
 
-
                 // CONTROLLO
 
                 if (
-                    kDown
-                    &
-                    KEY_DUP
-                ) {
+                    kDown &
+                    KEY_DUP)
+                {
 
                     if (
-                        selectedControl
-                        >
-                        CONTROL_REC
-                    ) {
+                        selectedControl >
+                        CONTROL_REC)
+                    {
 
                         selectedControl =
-                            (ControlType)(
-                                selectedControl
-                                -
-                                1
-                            );
+                            (ControlType)(selectedControl -
+                                          1);
                     }
                 }
-
 
                 if (
-                    kDown
-                    &
-                    KEY_DDOWN
-                ) {
+                    kDown &
+                    KEY_DDOWN)
+                {
 
                     if (
-                        selectedControl
-                        <
-                        CONTROL_ERS
-                    ) {
+                        selectedControl <
+                        CONTROL_ERS)
+                    {
 
                         selectedControl =
-                            (ControlType)(
-                                selectedControl
-                                +
-                                1
-                            );
+                            (ControlType)(selectedControl +
+                                          1);
                     }
                 }
-
 
                 // =================================================
                 // A
                 // =================================================
 
                 if (
-                    kDown
-                    &
-                    KEY_A
-                ) {
+                    kDown &
+                    KEY_A)
+                {
 
                     // =============================================
                     // REC
                     // =============================================
 
                     if (
-                        selectedControl
-                        ==
-                        CONTROL_REC
-                    ) {
+                        selectedControl ==
+                        CONTROL_REC)
+                    {
 
                         // =========================================
                         // START REC
                         // =========================================
 
                         if (
-                            !isRecording
-                        ) {
+                            !isRecording)
+                        {
 
                             // -------------------------------------
                             // PULISCE IL BUFFER MICROFONO
@@ -1758,9 +1437,7 @@ int main() {
                             memset(
                                 mic_buffer,
                                 0,
-                                MAX_BUF_SIZE
-                            );
-
+                                MAX_BUF_SIZE);
 
                             // -------------------------------------
                             // START SAMPLING
@@ -1774,50 +1451,35 @@ int main() {
                                     MICU_SAMPLE_RATE_16360,
                                     0,
                                     active_buf_size,
-                                    true
-                                );
-
+                                    true);
 
                             // Procediamo SOLO se il MIC
                             // ha iniziato correttamente.
 
                             if (
                                 R_SUCCEEDED(
-                                    startResult
-                                )
-                            ) {
+                                    startResult))
+                            {
 
                                 recordingTrack =
                                     selectedTrack;
 
-
                                 isRecording =
                                     true;
-
 
                                 // Cancella vecchia registrazione
                                 // di questa traccia.
 
                                 memset(
-                                    tracks[
-                                        recordingTrack
-                                    ].buffer,
+                                    tracks[recordingTrack].buffer,
                                     0,
-                                    active_buf_size
-                                );
+                                    active_buf_size);
 
-
-                                tracks[
-                                    recordingTrack
-                                ].active =
+                                tracks[recordingTrack].active =
                                     false;
 
-
-                                tracks[
-                                    recordingTrack
-                                ].peak =
+                                tracks[recordingTrack].peak =
                                     0;
-
 
                                 // Rimuove la vecchia traccia
                                 // dal master SENZA reset NDSP.
@@ -1827,21 +1489,18 @@ int main() {
                                     masterVolume,
                                     play_buffer,
                                     total_samples,
-                                    active_buf_size
-                                );
+                                    active_buf_size);
                             }
                         }
-
 
                         // =========================================
                         // STOP REC
                         // =========================================
 
                         else if (
-                            recordingTrack
-                            ==
-                            selectedTrack
-                        ) {
+                            recordingTrack ==
+                            selectedTrack)
+                        {
 
                             // -------------------------------------
                             // IL MICROFONO SMETTE DI REGISTRARE QUI
@@ -1849,24 +1508,19 @@ int main() {
 
                             MICU_StopSampling();
 
-
                             isRecording =
                                 false;
-
 
                             // Ora il CPU deve rileggere i dati
                             // scritti dal servizio MIC.
 
                             DSP_InvalidateDataCache(
                                 mic_buffer,
-                                active_buf_size
-                            );
+                                active_buf_size);
 
-
-                            int16_t* mic_ptr =
-                                (int16_t*)
-                                mic_buffer;
-
+                            int16_t *mic_ptr =
+                                (int16_t *)
+                                    mic_buffer;
 
                             // =====================================
                             // COPIA AUDIO
@@ -1875,38 +1529,25 @@ int main() {
                             for (
                                 size_t i = 0;
                                 i < total_samples;
-                                i++
-                            ) {
+                                i++)
+                            {
 
-                                tracks[
-                                    recordingTrack
-                                ].buffer[i]
-                                    =
+                                tracks[recordingTrack].buffer[i] =
                                     mic_ptr[i];
                             }
-
 
                             // =====================================
                             // ATTIVA TRACCIA
                             // =====================================
 
-                            tracks[
-                                recordingTrack
-                            ].active =
+                            tracks[recordingTrack].active =
                                 true;
 
-
-                            tracks[
-                                recordingTrack
-                            ].peak =
+                            tracks[recordingTrack].peak =
                                 calculate_peak(
-                                    tracks[
-                                        recordingTrack
-                                    ].buffer,
+                                    tracks[recordingTrack].buffer,
 
-                                    total_samples
-                                );
-
+                                    total_samples);
 
                             // =====================================
                             // MIX
@@ -1917,9 +1558,7 @@ int main() {
                                 masterVolume,
                                 play_buffer,
                                 total_samples,
-                                active_buf_size
-                            );
-
+                                active_buf_size);
 
                             // =====================================
                             // PLAYBACK
@@ -1927,197 +1566,157 @@ int main() {
 
                             update_ndsp(
                                 play_buffer,
-                                total_samples
-                            );
-
+                                total_samples);
 
                             // Riallinea la timeline al playback.
 
                             globalStartTime =
                                 osGetTime();
 
-
                             recordingTrack =
                                 -1;
                         }
                     }
-
 
                     // =============================================
                     // SPEED
                     // =============================================
 
                     else if (
-                        selectedControl
-                        ==
-                        CONTROL_SPEED
-                    ) {
+                        selectedControl ==
+                        CONTROL_SPEED)
+                    {
 
                         editingSpeed =
                             true;
                     }
-
 
                     // =============================================
                     // REV
                     // =============================================
 
                     else if (
-                        selectedControl
-                        ==
-                        CONTROL_REV
-                    ) {
+                        selectedControl ==
+                        CONTROL_REV)
+                    {
 
                         // futuro
                     }
-
 
                     // =============================================
                     // ERS
                     // =============================================
 
                     else if (
-                        selectedControl
-                        ==
-                        CONTROL_ERS
-                    ) {
+                        selectedControl ==
+                        CONTROL_ERS)
+                    {
 
                         if (
-                            !isRecording
-                        ) {
+                            !isRecording)
+                        {
 
-                            tracks[
-                                selectedTrack
-                            ].active =
+                            tracks[selectedTrack].active =
                                 false;
 
-
-                            tracks[
-                                selectedTrack
-                            ].peak =
+                            tracks[selectedTrack].peak =
                                 0;
 
-
                             memset(
-                                tracks[
-                                    selectedTrack
-                                ].buffer,
+                                tracks[selectedTrack].buffer,
                                 0,
-                                active_buf_size
-                            );
-
+                                active_buf_size);
 
                             update_master_mix(
                                 tracks,
                                 masterVolume,
                                 play_buffer,
                                 total_samples,
-                                active_buf_size
-                            );
+                                active_buf_size);
                         }
                     }
                 }
             }
-
 
             // =================================================
             // TOUCH FADER
             // =================================================
 
             if (
-                kHeld
-                &
-                KEY_TOUCH
-            ) {
+                kHeld &
+                KEY_TOUCH)
+            {
 
                 touchPosition touch;
 
-
                 hidTouchRead(
-                    &touch
-                );
-
+                    &touch);
 
                 int fader =
                     findTouchedFader(
                         touch.px,
-                        touch.py
-                    );
-
+                        touch.py);
 
                 if (
-                    fader >= 0
-                ) {
+                    fader >= 0)
+                {
 
                     int newVolume =
                         yToVolume(
-                            touch.py
-                        );
-
+                            touch.py);
 
                     // TRACK
 
                     if (
-                        fader
-                        <
-                        NUM_TRACKS
-                    ) {
+                        fader <
+                        NUM_TRACKS)
+                    {
 
                         if (
-                            tracks[
-                                fader
-                            ].volume
-                            !=
-                            newVolume
-                        ) {
+                            tracks[fader].volume !=
+                            newVolume)
+                        {
 
-                            tracks[
-                                fader
-                            ].volume =
+                            tracks[fader].volume =
                                 newVolume;
 
-
                             if (
-                                !isRecording
-                            ) {
+                                !isRecording)
+                            {
 
                                 update_master_mix(
                                     tracks,
                                     masterVolume,
                                     play_buffer,
                                     total_samples,
-                                    active_buf_size
-                                );
+                                    active_buf_size);
                             }
                         }
                     }
 
-
                     // MASTER
 
-                    else {
+                    else
+                    {
 
                         if (
-                            masterVolume
-                            !=
-                            newVolume
-                        ) {
+                            masterVolume !=
+                            newVolume)
+                        {
 
                             masterVolume =
                                 newVolume;
 
-
                             if (
-                                !isRecording
-                            ) {
+                                !isRecording)
+                            {
 
                                 update_master_mix(
                                     tracks,
                                     masterVolume,
                                     play_buffer,
                                     total_samples,
-                                    active_buf_size
-                                );
+                                    active_buf_size);
                             }
                         }
                     }
@@ -2125,82 +1724,63 @@ int main() {
             }
         }
 
-
         // ====================================================
         // VU
         // ====================================================
 
         if (
-            timerConfirmed
-        ) {
+            timerConfirmed)
+        {
 
             u64 elapsed =
-                osGetTime()
-                -
+                osGetTime() -
                 globalStartTime;
-
 
             u64 loopMs =
                 (u64)
-                selectedSeconds
-                *
+                    selectedSeconds *
                 1000;
-
 
             u32 positionMs =
-                (u32)(
-                    elapsed
-                    %
-                    loopMs
-                );
-
+                (u32)(elapsed %
+                      loopMs);
 
             size_t samplePosition =
-                (
-                    (size_t)
-                    positionMs
-                    *
-                    SAMPLE_RATE
-                )
-                /
+                ((size_t)
+                     positionMs *
+                 SAMPLE_RATE) /
                 1000;
-
 
             float targetVU =
                 calculateVU(
                     tracks,
                     masterVolume,
                     samplePosition,
-                    total_samples
-                );
-
+                    total_samples);
 
             // Attack
 
             if (
-                targetVU
-                >
-                vuLevel
-            ) {
+                targetVU >
+                vuLevel)
+            {
 
                 vuLevel =
                     targetVU;
             }
 
-
             // Release
 
-            else {
+            else
+            {
 
                 vuLevel *=
                     0.88f;
 
-
                 if (
-                    vuLevel
-                    <
-                    0.001f
-                ) {
+                    vuLevel <
+                    0.001f)
+                {
 
                     vuLevel =
                         0.0f;
@@ -2208,20 +1788,15 @@ int main() {
             }
         }
 
-
         // ====================================================
         // RENDER
         // ====================================================
 
         C2D_TextBufClear(
-            textBuf
-        );
-
+            textBuf);
 
         C3D_FrameBegin(
-            C3D_FRAME_SYNCDRAW
-        );
-
+            C3D_FRAME_SYNCDRAW);
 
         // ====================================================
         // TOP
@@ -2233,19 +1808,14 @@ int main() {
                 0,
                 0,
                 0,
-                255
-            )
-        );
-
+                255));
 
         C2D_SceneBegin(
-            top
-        );
-
+            top);
 
         if (
-            timerConfirmed
-        ) {
+            timerConfirmed)
+        {
 
             drawTop(
                 tracks,
@@ -2256,11 +1826,11 @@ int main() {
                 isRecording,
                 recordingTrack,
 
-                vuLevel
-            );
+                vuLevel);
         }
 
-        else {
+        else
+        {
 
             drawText(
                 textBuf,
@@ -2273,21 +1843,15 @@ int main() {
                     255,
                     255,
                     255,
-                    255
-                )
-            );
-
+                    255));
 
             char buffer[32];
-
 
             snprintf(
                 buffer,
                 sizeof(buffer),
                 "Loop: %d secondi",
-                selectedSeconds
-            );
-
+                selectedSeconds);
 
             drawText(
                 textBuf,
@@ -2300,10 +1864,7 @@ int main() {
                     255,
                     255,
                     255,
-                    255
-                )
-            );
-
+                    255));
 
             drawText(
                 textBuf,
@@ -2316,11 +1877,8 @@ int main() {
                     200,
                     200,
                     200,
-                    255
-                )
-            );
+                    255));
         }
-
 
         // ====================================================
         // BOTTOM
@@ -2332,33 +1890,25 @@ int main() {
                 0,
                 0,
                 0,
-                255
-            )
-        );
-
+                255));
 
         C2D_SceneBegin(
-            bottom
-        );
-
+            bottom);
 
         if (
-            timerConfirmed
-        ) {
+            timerConfirmed)
+        {
 
             drawBottom(
                 tracks,
                 masterVolume,
 
                 isRecording,
-                recordingTrack
-            );
+                recordingTrack);
         }
-
 
         C3D_FrameEnd(0);
     }
-
 
     // ========================================================
     // CLEANUP
@@ -2368,75 +1918,60 @@ int main() {
     // fermiamo prima il campionamento.
 
     if (
-        isRecording
-    ) {
+        isRecording)
+    {
 
         MICU_StopSampling();
     }
 
-
     MICU_SetPower(
-        false
-    );
-
+        false);
 
     micExit();
 
-
     ndspExit();
 
-
     if (
-        uiSheet
-    ) {
+        uiSheet)
+    {
 
         C2D_SpriteSheetFree(
-            uiSheet
-        );
+            uiSheet);
     }
-
 
     C2D_TextBufDelete(
-        textBuf
-    );
-
+        textBuf);
 
     if (
-        play_buffer
-    ) {
+        play_buffer)
+    {
 
         linearFree(
-            play_buffer
-        );
+            play_buffer);
     }
-
 
     for (
         int i = 0;
         i < NUM_TRACKS;
-        i++
-    ) {
+        i++)
+    {
 
         if (
-            tracks[i].buffer
-        ) {
+            tracks[i].buffer)
+        {
 
             linearFree(
-                tracks[i].buffer
-            );
+                tracks[i].buffer);
         }
     }
 
-
     if (
-        mic_buffer
-    ) {
+        mic_buffer)
+    {
 
         free(
-            mic_buffer
-        );
+            mic_buffer);
     }
-
 
     C2D_Fini();
 
@@ -2445,7 +1980,6 @@ int main() {
     romfsExit();
 
     gfxExit();
-
 
     return 0;
 }
